@@ -1,0 +1,29 @@
+name: Tests
+
+on: [pull_request, push]
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        resolver: [lts-18, lts-17, lts-16, lts-15, lts-14]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.stack
+          key: ${{ matrix.resolver }}-${{ hashFiles('stack.yaml') }}
+
+      - name: Build and run tests
+        shell: bash
+        run: |
+          set -ex
+          stack upgrade || curl -sSL https://get.haskellstack.org/ | sh -s - -f
+          stack test --fast --no-terminal --resolver=${{ matrix.resolver }}
