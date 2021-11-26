@@ -9,8 +9,3 @@ where
 
 import Control.Monad.Parser.Class
 import Control.Monad.Trans.Parser
-  ( ErrorDesc (..),
-    ParseError (..),
-    ParseResult (..),
-    ParserT (..),
-  )
