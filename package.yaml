@@ -1,0 +1,39 @@
+name: comparse
+version: 0.1.0.0
+github: "nasso/comparse"
+license: BSD3
+author: "nasso"
+maintainer: "nassomails@gmail.com"
+copyright: "2021 nasso"
+
+extra-source-files:
+  - README.md
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:
+  Please see the README on GitHub at <https://github.com/nasso/comparse#readme>
+
+dependencies:
+  - base == 4.14.*
+  - mtl == 2.2.*
+  - transformers == 0.5.*
+
+library:
+  source-dirs: .
+  ghc-options: -Wall
+
+tests:
+  comparse-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -Wall
+    dependencies:
+      - comparse
+      - tasty == 1.4.*
+      - tasty-hunit == 0.10.*
