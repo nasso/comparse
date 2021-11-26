@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        resolver: [lts-18, lts-17, lts-16, lts-15, lts-14]
+        resolver: [lts-18]
 
     steps:
       - uses: actions/checkout@v2
