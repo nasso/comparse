@@ -15,41 +15,43 @@ infixl 3 <|>
 
 infixl 1 <?>
 
--- | A monad that parses a stream of items.
+-- | A monad with parsing capabilities.
 class Monad m => MonadParser s m | m -> s where
-  -- | Return the input stream.
-  getInput :: m s
+  -- | The current input stream.
+  parseStream :: m s
 
   -- | Replace the input stream.
-  setInput :: s -> m ()
+  setParseStream :: s -> m ()
 
   -- | A parser that always fails.
   noParse :: m a
 
-  -- | Parse the next item.
+  -- | A parser that returns the next item.
   item :: m (Item s)
 
-  -- | A parser that only succeeds if the given parser succeeds, but without
-  -- consuming any input.
-  lookAhead :: m a -> m ()
+  -- | @followedBy p@ is a parser that succeeds if @p@ succeeds, but it does not
+  -- consume any input.
+  followedBy :: m a -> m ()
 
-  -- | A parser that only succeeds if the given parser fails. Never consumes
-  -- any input.
-  negativeLookAhead :: m a -> m ()
+  -- | @notFollowedBy p@ is a parser that only succeeds if @p@ fails. This
+  -- parser will not consume any input.
+  notFollowedBy :: m a -> m ()
 
-  -- | Attempt to run the given parser, but backtrack the error position if it
-  -- fails.
+  -- | @try p@ is a parser that does everything like @p@, except it forcefully
+  -- resets the position of any error reported by @p@ to the current position.
   try :: m a -> m a
 
-  -- | Attempt to parse @p@, if it fails, try @q@.
+  -- | @p <|> q@ is a parser that is equivalent to @p@ when @p@ succeeds and
+  -- @q@ when @p@ fails to parse anything.
   (<|>) :: m a -> m a -> m a
 
-  -- | Label a parser with a name for error messages.
+  -- | @p <?> msg@ is a parser that behaves like @p@, but when @p@ fails, it
+  -- reports an error indicating that @msg@ was the expected input.
   (<?>) :: m a -> String -> m a
 
 -- | Parser that succeeds if the stream is empty. Does not consume any items.
 eof :: MonadParser s m => m ()
-eof = negativeLookAhead item <?> "end of input"
+eof = notFollowedBy item <?> "end of input"
 
 -- | Fail with an "expected" message.
 expected :: MonadParser s m => String -> m a
@@ -145,9 +147,9 @@ chainr1 p op = scan
 -- | Run a parser on a different stream of items.
 withInput :: MonadParser s m => s -> m a -> m (a, s)
 withInput s' p = do
-  s <- getInput
-  setInput s'
+  s <- parseStream
+  setParseStream s'
   x <- p
-  s'' <- getInput
-  setInput s
+  s'' <- parseStream
+  setParseStream s
   return (x, s'')

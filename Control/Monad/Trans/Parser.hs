@@ -91,9 +91,9 @@ instance (Applicative m, Monad m, Stream s) => MonadFail (ParserT s m) where
   fail msg = ParserT $ \s -> pure $ NoParse $ ParseError (getPos s) [Note msg]
 
 instance (Monad m, Stream s) => MonadParser s (ParserT s m) where
-  getInput = ParserT $ \s -> pure $ Parsed s s $ emptyError s
+  parseStream = ParserT $ \s -> pure $ Parsed s s $ emptyError s
 
-  setInput s = ParserT $ \_ -> pure $ Parsed () s $ emptyError s
+  setParseStream s = ParserT $ \_ -> pure $ Parsed () s $ emptyError s
 
   noParse = ParserT $ \s -> pure $ NoParse $ emptyError s
 
@@ -103,12 +103,12 @@ instance (Monad m, Stream s) => MonadParser s (ParserT s m) where
         Nothing -> NoParse $ emptyError s
         Just (x, s') -> Parsed x s' $ emptyError s'
 
-  negativeLookAhead p = ParserT $ \s -> go s <$> runParserT p s
+  notFollowedBy p = ParserT $ \s -> go s <$> runParserT p s
     where
       go s (NoParse _) = Parsed () s $ emptyError s
       go s _ = NoParse $ emptyError s
 
-  lookAhead p = ParserT $ \s -> do
+  followedBy p = ParserT $ \s -> do
     r <- runParserT p s
     pure $ case r of
       (NoParse e) -> NoParse e

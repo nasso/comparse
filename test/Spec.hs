@@ -113,14 +113,14 @@ coreCombinatorsTests :: TestTree
 coreCombinatorsTests =
   testGroup
     "Core combinators"
-    [ testCase "lookAhead fails when parser fails" $
-        parse (lookAhead $ like 'h') "ello" @?= Nothing,
-      testCase "lookAhead succeeds without consuming input" $
-        parse (lookAhead $ like 'h') "hi" @?= Just ((), "hi"),
-      testCase "negativeLookAhead fails when parser succeeds" $
-        parse (negativeLookAhead $ like 'h') "hi" @?= Nothing,
-      testCase "negativeLookAhead succeeds without consuming input" $
-        parse (negativeLookAhead $ like 'g') "hi" @?= Just ((), "hi"),
+    [ testCase "followedBy fails when parser fails" $
+        parse (followedBy $ like 'h') "ello" @?= Nothing,
+      testCase "followedBy succeeds without consuming input" $
+        parse (followedBy $ like 'h') "hi" @?= Just ((), "hi"),
+      testCase "notFollowedBy fails when parser succeeds" $
+        parse (notFollowedBy $ like 'h') "hi" @?= Nothing,
+      testCase "notFollowedBy succeeds without consuming input" $
+        parse (notFollowedBy $ like 'g') "hi" @?= Just ((), "hi"),
       testCase "`a <|> b` returns a when it succeeds" $
         parse (like 'h' <|> like 'g') "hi" @?= Just ('h', "i"),
       testCase "`a <|> b` returns b when a fails" $
