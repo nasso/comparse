@@ -80,7 +80,7 @@ json =
     <|> JArray <$> array
 
 stringLiteral :: StringParser String
-stringLiteral = lexeme $ like '"' *> many (noneOf "\"") <* like '"'
+stringLiteral = lexeme $ like '"' *> many (unlike '\"') <* like '"'
 
 number :: StringParser Int
 number =
