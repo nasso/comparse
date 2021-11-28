@@ -2,6 +2,7 @@ module Json (jsonTests) where
 
 import Control.Monad (void)
 import Control.Monad.Parser
+import Data.Char (isAlpha, isDigit)
 import Data.Stream.StringLines
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -53,7 +54,8 @@ jsonTests =
     testCase "invalid input" $ parseJValue "foo" @?= Nothing,
     testCase "weird spacing" $
       parseJValue "   {\t  \n\"foo\"\r \t: \"bar\"\n }  \t"
-        @?= Just (JObject [("foo", JString "bar")])
+        @?= Just (JObject [("foo", JString "bar")]),
+    testCase "number followed by letter" $ parseJValue "123a" @?= Nothing
   ]
 
 parseJValue :: String -> Maybe JValue
@@ -84,11 +86,13 @@ stringLiteral = lexeme $ like '"' *> many (unlike '\"') <* like '"'
 
 number :: StringParser Int
 number =
-  lexeme $
-    read <$> ((:) <$> like '-' <*> many1 digit)
-      <|> read <$> (optional (like '+') *> many1 digit)
+  lexeme
+    ( read <$> ((:) <$> like '-' <*> many1 digit)
+        <|> read <$> (optional (like '+') *> many1 digit)
+    )
+    <* notFollowedBy (match isAlpha)
   where
-    digit = oneOf ['0' .. '9']
+    digit = match isDigit
 
 bool :: StringParser Bool
 bool = True <$ symbol "true" <|> False <$ symbol "false"

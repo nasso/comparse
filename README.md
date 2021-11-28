@@ -19,6 +19,7 @@ of the [JSON](https://en.wikipedia.org/wiki/JSON) data format:
 ```hs
 import Control.Monad (void)
 import Control.Monad.Parser
+import Data.Char (isAlpha, isDigit)
 import Data.Stream.StringLines
 
 data JValue
@@ -61,11 +62,13 @@ stringLiteral = lexeme $ like '"' *> many (unlike '\"') <* like '"'
 
 number :: StringParser Int
 number =
-  lexeme $
-    read <$> ((:) <$> like '-' <*> many1 digit)
-      <|> read <$> (optional (like '+') *> many1 digit)
+  lexeme
+    ( read <$> ((:) <$> like '-' <*> many1 digit)
+        <|> read <$> (optional (like '+') *> many1 digit)
+    )
+    <* notFollowedBy (match isAlpha)
   where
-    digit = oneOf ['0' .. '9']
+    digit = match isDigit
 
 bool :: StringParser Bool
 bool = True <$ symbol "true" <|> False <$ symbol "false"
