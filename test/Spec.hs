@@ -8,7 +8,7 @@ main =
   defaultMain $
     testGroup
       "Tests"
-      [ testGroup "Streams" streamTests
-      , testGroup "Parsers" parserTests
-      , testGroup "Json" jsonTests
+      [ testGroup "Streams" streamTests,
+        testGroup "Parsers" parserTests,
+        testGroup "Json" jsonTests
       ]

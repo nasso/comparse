@@ -28,6 +28,10 @@ data JValue
   | JNull
   | JObject [(String, JValue)]
   | JArray [JValue]
+  deriving (Show)
+
+main :: IO ()
+main = interact $ show . parseJValue
 
 parseJValue :: String -> Maybe JValue
 parseJValue s =
