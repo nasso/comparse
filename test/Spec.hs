@@ -1,3 +1,4 @@
+import Json
 import Parsing
 import Stream
 import Test.Tasty
@@ -9,4 +10,5 @@ main =
       "Tests"
       [ testGroup "Streams" streamTests
       , testGroup "Parsers" parserTests
+      , testGroup "Json" jsonTests
       ]

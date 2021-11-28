@@ -46,6 +46,7 @@ test-suite comparse-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Json
       Parsing
       Stream
       Stream.Generic

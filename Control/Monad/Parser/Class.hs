@@ -82,6 +82,11 @@ many :: MonadParser s m => m a -> m [a]
 many p = ((:) <$> p <*> many p) <|> pure []
 
 -- | Try to run the given parser as many times as possible, but at least once.
+-- The result is returned as a regular list, but is guaranteed to be non-empty.
+many1 :: MonadParser s m => m a -> m [a]
+many1 p = (:) <$> p <*> many p
+
+-- | Try to run the given parser as many times as possible, but at least once.
 some :: MonadParser s m => m a -> m (NonEmpty a)
 some p = (:|) <$> p <*> many p
 
