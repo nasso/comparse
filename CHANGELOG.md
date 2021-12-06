@@ -1,6 +1,8 @@
 # Changelog for comparse
 
-## Unreleased changes
+## Unreleased
+
+## v0.1.0.0
 
 - `ParserT` monad transformer
 - Basic combinators
