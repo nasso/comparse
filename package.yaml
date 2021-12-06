@@ -1,9 +1,11 @@
 name: comparse
 version: 0.1.0.0
+category: Parsing
+synopsis: An unopiniated parser combinators library.
 github: "nasso/comparse"
 license: BSD3
 author: "nasso"
-maintainer: "nassomails@gmail.com"
+maintainer: nasso <nassomails@gmail.com>
 copyright: "2021 nasso"
 
 extra-source-files:
