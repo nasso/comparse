@@ -90,20 +90,20 @@ many1 p = (:) <$> p <*> many p
 some :: MonadParser s m => m a -> m (NonEmpty a)
 some p = (:|) <$> p <*> many p
 
--- | Parse a non-empty series of `a` separated by `b`s (without a trailing `b`).
+-- | Parse a non-empty series of @a@ separated by @b@s (without a trailing @b@).
 sepBy1 :: MonadParser s m => m a -> m b -> m (NonEmpty a)
 sepBy1 a b = (:|) <$> a <*> many (b *> a)
 
--- | Parse a potentially empty series of `a` separated by `b`s (without a
--- trailing `b`).
+-- | Parse a potentially empty series of @a@ separated by @b@s (without a
+-- trailing @b@).
 sepBy :: MonadParser s m => m a -> m b -> m [a]
 sepBy a b = NonEmpty.toList <$> sepBy1 a b <|> pure []
 
--- | Parse any value equal to `a`.
+-- | Parse any value equal to @a@.
 like :: (MonadParser s m, Eq (Item s), Show (Item s)) => Item s -> m (Item s)
 like a = item `satisfy` (== a) <?> show a
 
--- | Parse any value not equal to `a`.
+-- | Parse any value not equal to @a@.
 unlike :: (MonadParser s m, Eq (Item s), Show (Item s)) => Item s -> m (Item s)
 unlike a = item `satisfy` (/= a) <?> "anything but " ++ show a
 
@@ -127,9 +127,9 @@ noneOf ::
   m (Item s)
 noneOf l = item `satisfy` (`notElem` l) <?> "none of " ++ show l
 
--- | `chainl1 p op` Parse a chain of *one* or more occurrences of `p`,
--- separated by `op`. Return a value obtained by a left associative application
--- of all functions returned by `op` to the values returned by `p`.
+-- | @chainl1 p op@ Parse a chain of *one* or more occurrences of @p@,
+-- separated by @op@. Return a value obtained by a left associative application
+-- of all functions returned by @op@ to the values returned by @p@.
 --
 -- This is particularly useful for parsing left associative infix operators.
 chainl1 :: MonadParser s m => m a -> m (a -> a -> a) -> m a
@@ -138,9 +138,9 @@ chainl1 p op = scan
     scan = p <**> rst
     rst = (\f y g x -> g (f x y)) <$> op <*> p <*> rst <|> pure id
 
--- | `chainr1 p op` Parse a chain of *one* or more occurrences of `p`,
--- separated by `op`. Return a value obtained by a right associative application
--- of all functions returned by `op` to the values returned by `p`.
+-- | @chainr1 p op@ Parse a chain of *one* or more occurrences of @p@,
+-- separated by @op@. Return a value obtained by a right associative application
+-- of all functions returned by @op@ to the values returned by @p@.
 --
 -- This is particularly useful for parsing right associative infix operators.
 chainr1 :: MonadParser s m => m a -> m (a -> a -> a) -> m a
