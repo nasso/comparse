@@ -44,25 +44,11 @@ data StringLines = StringLines String StringPos deriving (Eq, Show)
 
 instance Stream StringLines where
   type Item StringLines = Char
-  type Chunk StringLines = String
   type Pos StringLines = StringPos
 
   next (StringLines [] _) = Nothing
   next (StringLines ('\n' : xs) p) = Just ('\n', StringLines xs (nextl p xs))
   next (StringLines (x : xs) p) = Just (x, StringLines xs (adv p))
-
-  nextWhile f s = case next s of
-    Nothing -> ([], s)
-    Just (x, s') | f x -> (x : xs, s'') where (xs, s'') = nextWhile f s'
-    _ -> ([], s)
-
-  nextN 0 s = ([], s)
-  nextN n s = case next s of
-    Nothing -> ([], s)
-    Just (x, s') -> (x : xs, s'') where (xs, s'') = nextN (n - 1) s'
-
-  makeChunk _ = id
-  unmakeChunk _ = id
 
   getPos (StringLines _ p) = p
 
