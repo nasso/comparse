@@ -1,9 +1,12 @@
+{-# LANGUAGE TypeFamilies #-}
+
 module Json (jsonTests) where
 
 import Control.Monad (void)
 import Control.Monad.Parser
 import Data.Char (isAlpha, isDigit)
-import Data.Stream.StringLines
+import Data.Text (Text)
+import qualified Data.Text as T
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -18,30 +21,35 @@ data JValue
 
 jsonTests :: [TestTree]
 jsonTests =
-  [ testCase "string" $ parseJValue "\"foo\"" @?= Just (JString "foo"),
-    testCase "empty string" $ parseJValue "\"\"" @?= Just (JString ""),
-    testCase "number" $ parseJValue "123" @?= Just (JNumber 123),
-    testCase "negative number" $ parseJValue "-123" @?= Just (JNumber (-123)),
-    testCase "positive number" $ parseJValue "+123" @?= Just (JNumber 123),
-    testCase "bool true" $ parseJValue "true" @?= Just (JBool True),
-    testCase "bool false" $ parseJValue "false" @?= Just (JBool False),
-    testCase "null" $ parseJValue "null" @?= Just JNull,
+  testsWith parseString
+    ++ testsWith (parseText . T.pack)
+
+testsWith :: (String -> Maybe JValue) -> [TestTree]
+testsWith p =
+  [ testCase "string" $ p "\"foo\"" @?= Just (JString "foo"),
+    testCase "empty string" $ p "\"\"" @?= Just (JString ""),
+    testCase "number" $ p "123" @?= Just (JNumber 123),
+    testCase "negative number" $ p "-123" @?= Just (JNumber (-123)),
+    testCase "positive number" $ p "+123" @?= Just (JNumber 123),
+    testCase "bool true" $ p "true" @?= Just (JBool True),
+    testCase "bool false" $ p "false" @?= Just (JBool False),
+    testCase "null" $ p "null" @?= Just JNull,
     testCase "object" $
-      parseJValue "{\"foo\": \"bar\"}"
+      p "{\"foo\": \"bar\"}"
         @?= Just (JObject [("foo", JString "bar")]),
-    testCase "empty object" $ parseJValue "{}" @?= Just (JObject []),
+    testCase "empty object" $ p "{}" @?= Just (JObject []),
     testCase "array" $
-      parseJValue "[1, 2, 3]"
+      p "[1, 2, 3]"
         @?= Just (JArray [JNumber 1, JNumber 2, JNumber 3]),
-    testCase "empty array" $ parseJValue "[]" @?= Just (JArray []),
+    testCase "empty array" $ p "[]" @?= Just (JArray []),
     testCase "nested array" $
-      parseJValue "[1, [2, 3], 4]"
+      p "[1, [2, 3], 4]"
         @?= Just (JArray [JNumber 1, JArray [JNumber 2, JNumber 3], JNumber 4]),
     testCase "nested object" $
-      parseJValue "{\"foo\": {\"bar\": \"baz\"}}"
+      p "{\"foo\": {\"bar\": \"baz\"}}"
         @?= Just (JObject [("foo", JObject [("bar", JString "baz")])]),
     testCase "nested object with array" $
-      parseJValue "{\"foo\": {\"bar\": [1, 2, 3]}}"
+      p "{\"foo\": {\"bar\": [1, 2, 3]}}"
         @?= Just
           ( JObject
               [ ( "foo",
@@ -51,28 +59,34 @@ jsonTests =
                 )
               ]
           ),
-    testCase "invalid input" $ parseJValue "foo" @?= Nothing,
+    testCase "invalid input" $ p "foo" @?= Nothing,
     testCase "weird spacing" $
-      parseJValue "   {\t  \n\"foo\"\r \t: \"bar\"\n }  \t"
+      p "   {\t  \n\"foo\"\r \t: \"bar\"\n }  \t"
         @?= Just (JObject [("foo", JString "bar")]),
-    testCase "number followed by letter" $ parseJValue "123a" @?= Nothing
+    testCase "number followed by letter" $ p "123a" @?= Nothing
   ]
 
-parseJValue :: String -> Maybe JValue
-parseJValue s =
+parseString :: String -> Maybe JValue
+parseString s =
   case runStringParser (json <* eof) s of
-    Parsed v (StringLines "" _) _ -> Just v
+    Parsed v _ _ -> Just v
     _ -> Nothing
 
-lexeme :: StringParser a -> StringParser a
+parseText :: Text -> Maybe JValue
+parseText t =
+  case runTextParser (json <* eof) t of
+    Parsed v _ _ -> Just v
+    _ -> Nothing
+
+lexeme :: CharParser p => p a -> p a
 lexeme p = spaces *> p <* spaces
   where
     spaces = void $ many $ oneOf " \n\r\t"
 
-symbol :: String -> StringParser String
+symbol :: CharParser p => String -> p String
 symbol = lexeme . string
 
-json :: StringParser JValue
+json :: CharParser p => p JValue
 json =
   JString <$> stringLiteral
     <|> JNumber <$> number
@@ -81,10 +95,10 @@ json =
     <|> JObject <$> object
     <|> JArray <$> array
 
-stringLiteral :: StringParser String
+stringLiteral :: CharParser p => p String
 stringLiteral = lexeme $ like '"' *> many (unlike '\"') <* like '"'
 
-number :: StringParser Int
+number :: CharParser p => p Int
 number =
   lexeme
     ( read <$> ((:) <$> like '-' <*> many1 digit)
@@ -94,14 +108,14 @@ number =
   where
     digit = match isDigit
 
-bool :: StringParser Bool
+bool :: CharParser p => p Bool
 bool = True <$ symbol "true" <|> False <$ symbol "false"
 
-object :: StringParser [(String, JValue)]
+object :: CharParser p => p [(String, JValue)]
 object =
   symbol "{"
     *> sepBy ((,) <$> (stringLiteral <* symbol ":") <*> json) (symbol ",")
     <* symbol "}"
 
-array :: StringParser [JValue]
+array :: CharParser p => p [JValue]
 array = symbol "[" *> sepBy json (symbol ",") <* symbol "]"

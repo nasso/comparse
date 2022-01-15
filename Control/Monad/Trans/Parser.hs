@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Control.Monad.Trans.Parser
@@ -90,7 +91,9 @@ instance (Stream s, Monad m) => Monad (ParserT s m) where
 instance (Applicative m, Monad m, Stream s) => MonadFail (ParserT s m) where
   fail msg = ParserT $ \s -> pure $ NoParse $ ParseError (getPos s) [Note msg]
 
-instance (Monad m, Stream s) => MonadParser s (ParserT s m) where
+instance (Monad m, Stream s) => MonadParser (ParserT s m) where
+  type Input (ParserT s m) = s
+
   parseStream = ParserT $ \s -> pure $ Parsed s s $ emptyError s
 
   setParseStream s = ParserT $ \_ -> pure $ Parsed () s $ emptyError s
