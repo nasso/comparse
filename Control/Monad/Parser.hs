@@ -10,6 +10,7 @@ module Control.Monad.Parser
     ErrorDesc (..),
     Parser,
     StringParser,
+    ParserOf,
     CharParser,
     runParser,
     runStringParser,
@@ -27,7 +28,9 @@ import Data.Stream.TextLines
 import qualified Data.Stream.TextLines as TL
 import Data.Text (Text)
 
-type CharParser p = (MonadParser p, Item (Input p) ~ Char)
+type ParserOf i p = (MonadParser p, Item (Input p) ~ i)
+
+type CharParser p = ParserOf Char p
 
 type Parser s a = ParserT s Identity a
 
