@@ -11,16 +11,29 @@ parsing, state machines, and so on. `comparse` does its best to provide
 meaningful error messages without sacrificing performances or the developer
 experience when writing parsers.
 
+## How?
+
+The main difference between `comparse` and other equivalent libraries is that
+the parsers you write are generic over the exact type of the input stream. That
+means you can write parsers that work with both `String`, `Text` or any other
+source of `Char`s with no modification. The combinators in `comparse` also work
+with anything that's an instance of `Stream`, even if it's not a `Stream` of
+`Char`s (e.g. a `TokenStream`!).
+
 ## Example
 
-The following example shows how to use the `comparse` library to parse a subset
-of the [JSON](https://en.wikipedia.org/wiki/JSON) data format:
+The following example shows how to use the `comparse` library to parse a
+simplified subset of the [JSON](https://en.wikipedia.org/wiki/JSON) data format:
 
 ```hs
+-- TypeFamilies is required by the `CharParser` constraint
+{-# LANGUAGE TypeFamilies #-}
+
 import Control.Monad (void)
 import Control.Monad.Parser
 import Data.Char (isAlpha, isDigit)
-import Data.Stream.StringLines
+import Data.Text (Text)
+import qualified Data.Text as T
 
 data JValue
   = JString String
@@ -32,23 +45,34 @@ data JValue
   deriving (Show)
 
 main :: IO ()
-main = interact $ show . parseJValue
+main = do
+  input <- getContents
+  putStrLn "Parsing as String:"
+  print (parseString input)
+  putStrLn "Parsing as Text:"
+  print (parseText $ T.pack input)
 
-parseJValue :: String -> Maybe JValue
-parseJValue s =
+parseString :: String -> Maybe JValue
+parseString s =
   case runStringParser (json <* eof) s of
-    Parsed v (StringLines "" _) _ -> Just v
+    Parsed v _ _ -> Just v
     _ -> Nothing
 
-lexeme :: StringParser a -> StringParser a
+parseText :: Text -> Maybe JValue
+parseText t =
+  case runTextParser (json <* eof) t of
+    Parsed v _ _ -> Just v
+    _ -> Nothing
+
+lexeme :: CharParser p => p a -> p a
 lexeme p = spaces *> p <* spaces
   where
     spaces = void $ many $ oneOf " \n\r\t"
 
-symbol :: String -> StringParser String
+symbol :: CharParser p => String -> p String
 symbol = lexeme . string
 
-json :: StringParser JValue
+json :: CharParser p => p JValue
 json =
   JString <$> stringLiteral
     <|> JNumber <$> number
@@ -57,10 +81,10 @@ json =
     <|> JObject <$> object
     <|> JArray <$> array
 
-stringLiteral :: StringParser String
+stringLiteral :: CharParser p => p String
 stringLiteral = lexeme $ like '"' *> many (unlike '\"') <* like '"'
 
-number :: StringParser Int
+number :: CharParser p => p Int
 number =
   lexeme
     ( read <$> ((:) <$> like '-' <*> many1 digit)
@@ -70,17 +94,28 @@ number =
   where
     digit = match isDigit
 
-bool :: StringParser Bool
+bool :: CharParser p => p Bool
 bool = True <$ symbol "true" <|> False <$ symbol "false"
 
-object :: StringParser [(String, JValue)]
+object :: CharParser p => p [(String, JValue)]
 object =
   symbol "{"
     *> sepBy ((,) <$> (stringLiteral <* symbol ":") <*> json) (symbol ",")
     <* symbol "}"
 
-array :: StringParser [JValue]
+array :: CharParser p => p [JValue]
 array = symbol "[" *> sepBy json (symbol ",") <* symbol "]"
 ```
+
+The `CharParser p` constraint lets us easily write parsers specialised to
+character input streams. It's actually defined as a `type` alias:
+
+```hs
+type ParserOf i p = (MonadParser p, Item (Input p) ~ i)
+
+type CharParser p = ParserOf Char p
+```
+
+This design makes it very easy to write reusable parsers and combinators.
 
 For more examples, please refer to the [tests](test/Parsing.hs).

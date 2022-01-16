@@ -5,8 +5,8 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           comparse
-version:        0.1.0.0
-synopsis:       An unopiniated parser combinators library.
+version:        0.2.0.0
+synopsis:       A highly generic parser combinators library.
 description:    Please see the README on GitHub at <https://github.com/nasso/comparse#readme>
 category:       Parsing
 homepage:       https://github.com/nasso/comparse#readme
