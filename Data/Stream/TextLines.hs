@@ -10,7 +10,7 @@ where
 import Data.Stream (Stream (..))
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Vector (Vector, (!))
+import Data.Vector (Vector, (!?))
 import qualified Data.Vector as V
 
 data TextPos = TextPos Int Int (Vector Text)
@@ -20,7 +20,7 @@ instance Show TextPos where
     let (lnum, cnum) = (show (l + 1), show (c + 1))
         gut = replicate (length lnum) ' ' ++ " | "
         ngut = lnum ++ " | "
-        line = show $ ls ! l
+        line = maybe "" T.unpack $ ls !? l
         snippet = gut ++ "\n" ++ ngut ++ line ++ "\n" ++ gut ++ cursor
         cursor = replicate c ' ' ++ "^"
      in lnum ++ ":" ++ cnum ++ ":\n" ++ snippet
