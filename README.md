@@ -1,6 +1,6 @@
 # comparse
 
-[![Tests](https://img.shields.io/github/workflow/status/nasso/comparse/Tests)](https://github.com/nasso/comparse/actions/workflows/tests.yml)
+[![Tests](https://github.com/nasso/comparse/actions/workflows/tests.yml/badge.svg)](https://github.com/nasso/comparse/actions/workflows/tests.yml)
 [![Hackage](https://img.shields.io/hackage/v/comparse)](https://hackage.haskell.org/package/comparse)
 
 `comparse` is a parser combinator library supporting arbitrary input types.
